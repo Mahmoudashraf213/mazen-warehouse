@@ -1,5 +1,6 @@
 import cors from "cors";
 import { globalErrorHandling } from "./utils/appError.js";
+import { productRouter } from "./modules/index.js";
 
 export const bootStrap = (app, express) => {
   // parse req
@@ -12,6 +13,7 @@ export const bootStrap = (app, express) => {
   };
   app.use(cors(corsOptions));
   // routes
+  app.use("product", productRouter);
   // global error
   app.use(globalErrorHandling);
 };

@@ -13,5 +13,6 @@ const generateMessage = (entity) => ({
 
 
 export const messages = {
+    product : { ...generateMessage('Product') },
 
 }
