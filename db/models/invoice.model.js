@@ -1,5 +1,5 @@
 import { model, Schema } from "mongoose";
-import { invoiceStatus, paymentMethods } from "../utils/constant/enum.js";
+import { invoiceStatus, paymentMethods } from "../../src/utils/constant/enum.js";
 
 const invoiceItemSchema = new Schema(
   {
