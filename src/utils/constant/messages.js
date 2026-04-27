@@ -13,5 +13,16 @@ const generateMessage = (entity) => ({
 
 
 export const messages = {
-
+    product : { ...generateMessage('Product') ,
+    nameTaken: 'Product name is already taken',
+    noPriceMatch: "No products found in this price range",
+    noNameMatch: (name) => `No products found with name: ${name}`,
+    } ,
+    customer :{ ...generateMessage('Customer'),
+    phoneTaken: "Phone already in use",
+    emailTaken: "Email already in use",
+    noNameMatch: (name) => `No customers found with name: ${name}`,
+    noPhoneMatch: (phone) => `No customers found with phone: ${phone}`,
+    noCompanyMatch: (company) => `No customers found with company: ${company}`,
+    }
 }
