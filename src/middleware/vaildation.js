@@ -31,6 +31,12 @@ export const generalFields = {
       unitPrice: joi.number().min(0).required(),
     })
   ),
+  returnItems: joi.array().items(
+    joi.object({
+      productId: joi.string().hex().length(24).required(),
+      quantity: joi.number().min(1).required(),
+    })
+  ),
 };
 
 export const isValid = (schema) => {
