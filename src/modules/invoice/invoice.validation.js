@@ -1,5 +1,6 @@
 import joi from "joi";
 import { generalFields } from "../../middleware/vaildation.js";
+import e from "express";
 
 
 // validation schema for creating an invoice
@@ -15,4 +16,14 @@ export const createInvoiceSchema = joi.object({
 export const refundInvoiceSchema = joi.object({
   invoiceId: generalFields.objectId.required(),
   items: generalFields.returnItems.required(),
+});
+
+// validation schema for getting an invoice by ID
+export const getInvoiceByIdSchema = joi.object({
+  invoiceId: generalFields.objectId.required(),
+});
+
+// default export for all validation schemas
+export const deleteInvoiceByIdSchema = joi.object({
+  invoiceId: generalFields.objectId.required(),
 });

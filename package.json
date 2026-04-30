@@ -24,6 +24,7 @@
     "nanoid": "^5.1.9",
     "nodemailer": "^8.0.5",
     "path": "^0.12.7",
+    "puppeteer": "^24.42.0",
     "slugify": "^1.6.9"
   }
 }
