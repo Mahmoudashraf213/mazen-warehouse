@@ -74,7 +74,7 @@ export const createInvoice = async (req, res, next) => {
     paymentMethod,
   });
 
-  // apply calculations (بدل pre save)
+  // apply calculations 
   applyInvoiceCalculations(invoice);
 
   // credit logic
@@ -164,6 +164,7 @@ export const refundInvoice = async (req, res, next) => {
   });
 };
 
+// Get All Invoices
 export const getAllInvoices = async (req, res, next) => {
   const { paymentMethod, status } = req.query;
 
@@ -178,7 +179,8 @@ export const getAllInvoices = async (req, res, next) => {
     .select();
 
   const invoices = await apiFeature.mongooseQuery
-    .populate("items.productId"); // لو عايز المنتجات بس
+    .populate("items.productId") 
+    .populate("customerId");
 
   if (!invoices || invoices.length === 0) {
     let noMatchMessage = messages.invoice.failToFetch;
