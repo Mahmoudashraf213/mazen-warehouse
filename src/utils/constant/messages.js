@@ -35,4 +35,9 @@ export const messages = {
     noPaymentMatch: "No invoices found for this payment method",
     noStatusMatch: "No invoices found with this status",
     },
+    user: {
+        ...generateMessage('User'),
+        invalidCredentials: "Invalid code or password",
+        loginSuccessful: "Login successful",
+    },
 }

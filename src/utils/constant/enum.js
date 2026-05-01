@@ -13,3 +13,8 @@ export const paymentMethods = Object.freeze({
   CASH: "cash",
   CREDIT: "credit",
 });
+
+export const roles = Object.freeze({
+  ADMIN: "admin",
+  USER: "user", 
+});
