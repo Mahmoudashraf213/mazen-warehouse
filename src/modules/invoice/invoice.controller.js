@@ -204,7 +204,7 @@ export const getInvoiceById = async (req, res, next) => {
   const { invoiceId } = req.params;
 
   const invoice = await Invoice.findById(invoiceId)
-    .populate("customerId")
+    .populate("customerId", "name phone email")
     .populate("items.productId");
 
   if (!invoice) {
