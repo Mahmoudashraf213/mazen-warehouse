@@ -20,7 +20,7 @@ export const addCustomer = async (req, res, next) => {
   const formattedName = name?.trim().toLowerCase();
 
   const customerExist = await Customer.findOne({
-    $or: [{ phone }, { email }],
+    $or: [{ phone }],
   });
 
   if (customerExist) {
