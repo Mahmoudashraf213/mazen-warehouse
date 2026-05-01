@@ -100,10 +100,10 @@ export const createInvoice = async (req, res, next) => {
   });
 };
 
-// Refund / Return
-export const refundInvoice = async (req, res, next) => {
+// Update Invoice
+export const updateInvoice = async (req, res, next) => {
   const { invoiceId } = req.params;
-  const { items } = req.body;
+  const { items, discount, paidAmount, paymentMethod } = req.body;
 
   const invoice = await Invoice.findById(invoiceId);
 
@@ -111,55 +111,73 @@ export const refundInvoice = async (req, res, next) => {
     return next(new AppError(messages.invoice.notExist, 404));
   }
 
-  let refundAmount = 0;
+  // update items
+  for (const updatedItem of items) {
 
-  for (const returnItem of items) {
-    const invoiceItem = invoice.items.find(
-      (i) => i.productId.toString() === returnItem.productId
+    const oldItem = invoice.items.find(
+      (item) =>
+        item.productId.toString() === updatedItem.productId
     );
 
-    if (!invoiceItem) {
-      return next(new AppError(messages.invoice.itemNotFound, 404));
+    if (!oldItem) {
+      return next(
+        new AppError(messages.invoice.itemNotFound, 404)
+      );
     }
 
-    if (returnItem.quantity > invoiceItem.quantity) {
-      return next(new AppError(messages.invoice.invalidQuantity, 400));
-    }
-
-    const product = await Product.findById(returnItem.productId);
+    const product = await Product.findById(
+      updatedItem.productId
+    );
 
     if (!product) {
-      return next(new AppError(messages.product.notExist, 404));
+      return next(
+        new AppError(messages.product.notExist, 404)
+      );
     }
 
-    const itemRefund = returnItem.quantity * invoiceItem.unitPrice;
-    refundAmount += itemRefund;
+    // stock adjustment
+    const oldQuantity = oldItem.quantity;
+    const newQuantity = updatedItem.quantity;
 
-    product.stock += returnItem.quantity;
+    const quantityDifference =
+      newQuantity - oldQuantity;
+
+    if (product.stock < quantityDifference) {
+      return next(
+        new AppError(messages.product.outOfStock, 400)
+      );
+    }
+
+    product.stock -= quantityDifference;
+
     await product.save();
 
-    invoiceItem.quantity -= returnItem.quantity;
+    // update invoice item
+    oldItem.quantity = newQuantity;
+    oldItem.unitPrice = updatedItem.unitPrice;
   }
 
-  // re-apply calculations after refund
+  // optional fields
+  if (discount !== undefined) {
+    invoice.discount = discount;
+  }
+
+  if (paidAmount !== undefined) {
+    invoice.paidAmount = paidAmount;
+  }
+
+  if (paymentMethod) {
+    invoice.paymentMethod = paymentMethod;
+  }
+
+  // recalculate
   applyInvoiceCalculations(invoice);
-
-  // adjust customer balance
-  if (invoice.customerId) {
-    const customer = await Customer.findById(invoice.customerId);
-
-    if (customer) {
-      customer.balance -= refundAmount;
-      await customer.save();
-    }
-  }
 
   const updatedInvoice = await invoice.save();
 
   return res.status(200).json({
     success: true,
-    message: messages.invoice.refunded,
-    refundAmount,
+    message: messages.invoice.updated,
     data: updatedInvoice,
   });
 };
