@@ -1,4 +1,5 @@
 import puppeteer from "puppeteer";
+import chromium from "@sparticuz/chromium";
 import { Invoice, Product, Customer } from "../../../db/index.js";
 import { ApiFeature } from "../../utils/apiFeatures.js";
 import { AppError } from "../../utils/appError.js";
@@ -260,6 +261,7 @@ export const generateInvoicePDF = async (req, res, next) => {
   const { invoiceId } = req.params;
 
   const invoice = await Invoice.findById(invoiceId)
+    .populate("customerId") 
     .populate("items.productId");
 
   if (!invoice) {
@@ -388,7 +390,7 @@ export const generateInvoicePDF = async (req, res, next) => {
       <p><strong>Due:</strong> ${invoice.dueAmount || 0}</p>
     </div>
 
-    <!-- Seller Section (NOW AT BOTTOM) -->
+    <!-- Seller Section -->
     <div class="seller">
       <p><strong>Seller Name:</strong> ماذن رجب محمد</p>
       <p><strong>Phone 1:</strong> 01025210536</p>
@@ -405,12 +407,16 @@ export const generateInvoicePDF = async (req, res, next) => {
   `;
 
   const browser = await puppeteer.launch({
-    headless: "new",
+    args: chromium.args,
+    executablePath: await chromium.executablePath(),
+    headless: chromium.headless,
   });
 
   const page = await browser.newPage();
 
-  await page.setContent(html);
+  await page.setContent(html, {
+    waitUntil: "networkidle0",
+  });
 
   const pdf = await page.pdf({
     format: "A4",
