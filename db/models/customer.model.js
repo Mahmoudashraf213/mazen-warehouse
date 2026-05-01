@@ -53,11 +53,5 @@ const customerSchema = new Schema(
   { timestamps: true }
 );
 
-customerSchema.pre("save", function (next) {
-  if (this.balance > this.creditLimit && this.creditLimit > 0) {
-    this.isActive = false;
-  }
-  next();
-});
 
 export const Customer = model("Customer", customerSchema);

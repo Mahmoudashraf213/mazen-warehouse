@@ -1,8 +1,8 @@
 import { Router } from "express";
 import { isValid } from "../../middleware/vaildation.js";
 import { asyncHandler } from "../../middleware/asyncHandler.js";
-import { addProductSchema, deleteProductSchema, getProductByIdSchema, updateProductSchema } from "./product.validation.js";
 import { addProduct, deleteProductById, getAllProducts, getProductById, updateProduct } from "./product.controller.js";
+import { addProductSchema, deleteProductSchema, getProductByIdSchema, updateProductSchema } from "./product.validation.js";
 
 const productRouter = Router();
 

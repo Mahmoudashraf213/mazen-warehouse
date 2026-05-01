@@ -8,34 +8,34 @@ export const addProduct = async (req, res, next) => {
   const { name, description, unitPrice, unitsPerBox, retailPrice, stock } =
     req.body;
 
-  // format name
   const formattedName = name?.trim().toLowerCase();
 
-  // check if product exists
   const productExist = await Product.findOne({ name: formattedName });
 
   if (productExist) {
     return next(new AppError(messages.product.alreadyExist, 409));
   }
 
-  // create product
+  // calculate boxPrice
+  const boxPrice =
+    unitPrice && unitsPerBox ? unitPrice * unitsPerBox : undefined;
+
   const product = new Product({
     name: formattedName,
     description,
     unitPrice,
     unitsPerBox,
+    boxPrice,
     retailPrice,
     stock,
   });
 
-  // save product
   const createdProduct = await product.save();
 
   if (!createdProduct) {
     return next(new AppError(messages.product.failToCreate, 500));
   }
 
-  // response
   return res.status(201).json({
     success: true,
     message: messages.product.created,
@@ -49,16 +49,14 @@ export const updateProduct = async (req, res, next) => {
   const { name, description, unitPrice, unitsPerBox, retailPrice, stock } =
     req.body;
 
-  // find product
   const product = await Product.findById(productId);
+
   if (!product) {
     return next(new AppError(messages.product.notExist, 404));
   }
 
-  // format name
   const formattedName = name ? name.trim().toLowerCase() : undefined;
 
-  // check duplicate name
   if (formattedName && formattedName !== product.name) {
     const nameExists = await Product.findOne({ name: formattedName });
     if (nameExists) {
@@ -66,22 +64,31 @@ export const updateProduct = async (req, res, next) => {
     }
   }
 
+  // get final values (old or new)
+  const finalUnitPrice =
+    unitPrice !== undefined ? unitPrice : product.unitPrice;
+
+  const finalUnitsPerBox =
+    unitsPerBox !== undefined ? unitsPerBox : product.unitsPerBox;
+
+  // calculate boxPrice
+  const boxPrice = finalUnitPrice * finalUnitsPerBox;
+
   // update fields
   product.name = formattedName ?? product.name;
   product.description = description ?? product.description;
-  product.unitPrice = unitPrice ?? product.unitPrice;
-  product.unitsPerBox = unitsPerBox ?? product.unitsPerBox;
+  product.unitPrice = finalUnitPrice;
+  product.unitsPerBox = finalUnitsPerBox;
+  product.boxPrice = boxPrice;
   product.retailPrice = retailPrice ?? product.retailPrice;
   product.stock = stock ?? product.stock;
 
-  // save
   const updatedProduct = await product.save();
 
   if (!updatedProduct) {
     return next(new AppError(messages.product.failToUpdate, 500));
   }
 
-  // response
   return res.status(200).json({
     success: true,
     message: messages.product.updated,
@@ -131,7 +138,6 @@ export const getAllProducts = async (req, res, next) => {
     data: products,
   });
 };
-
 
 // Get Product By Id
 export const getProductById = async (req, res, next) => {
