@@ -14,19 +14,36 @@ const productSchema = new Schema(
       trim: true,
     },
 
+    // unit price
     unitPrice: {
       type: Number,
       required: true,
       min: 0,
     },
 
+    // units per box
     unitsPerBox: {
       type: Number,
       required: true,
       min: 1,
     },
 
+    // stock quantity
+    stock: {
+      type: Number,
+      required: true,
+      min: 0,
+      default: 0,
+    },
+
+    // box price
     boxPrice: {
+      type: Number,
+      min: 0,
+    },
+
+    // total units
+    totalUnits: {
       type: Number,
       min: 0,
     },
@@ -35,15 +52,10 @@ const productSchema = new Schema(
       type: Number,
       min: 0,
     },
-
-    stock: {
-      type: Number,
-      default: 0,
-    },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
-
-
-export const Product = model("Product", productSchema);
+export const Product = model("Product",productSchema);

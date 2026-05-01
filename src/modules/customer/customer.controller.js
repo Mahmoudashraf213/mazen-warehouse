@@ -12,32 +12,29 @@ export const addCustomer = async (req, res, next) => {
     email,
     companyName,
     address,
-    creditLimit,
-    allowCredit,
+    creditLimit = 0,
+    allowCredit = false,
     notes,
   } = req.body;
 
+  // format name
   const formattedName = name?.trim().toLowerCase();
 
-  const customerExist = await Customer.findOne({
-    $or: [{ phone }],
-  });
+  // check ONLY phone
+  const phoneExist = await Customer.findOne({ phone });
 
-  if (customerExist) {
-    return next(new AppError(messages.customer.alreadyExist, 409));
+  if (phoneExist) {
+    return next(new AppError(messages.customer.phoneTaken, 409));
   }
 
-  // default balance = 0
+  // default balance
   const balance = 0;
 
-  // determine isActive
-  let isActive = true;
+  // active status
+  const isActive = balance <= creditLimit || creditLimit === 0;
 
-  if (balance > creditLimit && creditLimit > 0) {
-    isActive = false;
-  }
-
-  const customer = new Customer({
+  // create customer
+  const customer = await Customer.create({
     name: formattedName,
     phone,
     secondPhone,
@@ -51,16 +48,10 @@ export const addCustomer = async (req, res, next) => {
     isActive,
   });
 
-  const createdCustomer = await customer.save();
-
-  if (!createdCustomer) {
-    return next(new AppError(messages.customer.failToCreate, 500));
-  }
-
   return res.status(201).json({
     success: true,
     message: messages.customer.created,
-    data: createdCustomer,
+    data: customer,
   });
 };
 
