@@ -1,4 +1,5 @@
 import puppeteer from "puppeteer";
+import mongoose from "mongoose";
 import chromium from "@sparticuz/chromium";
 import { Invoice, Product, Customer } from "../../../db/index.js";
 import { ApiFeature } from "../../utils/apiFeatures.js";
@@ -616,4 +617,94 @@ export const generateInvoicePDF = async (req, res, next) => {
 
   res.send(pdf);
 
+};
+
+
+
+
+// Get Customer Invoices Details
+export const getCustomerInvoicesDetails = async (
+  req,
+  res,
+  next
+) => {
+  const { customerId } = req.params;
+
+  const data = await Invoice.aggregate([
+    {
+      $match: {
+        customerId: new mongoose.Types.ObjectId(
+          customerId
+        ),
+      },
+    },
+
+    {
+      $lookup: {
+        from: "customers",
+        localField: "customerId",
+        foreignField: "_id",
+        as: "customer",
+      },
+    },
+
+    {
+      $unwind: "$customer",
+    },
+
+    {
+      $group: {
+        _id: "$customerId",
+
+        customerName: {
+          $first: "$customer.name",
+        },
+
+        customerPhone: {
+          $first: "$customer.phone",
+        },
+
+        totalInvoices: {
+          $sum: 1,
+        },
+
+        totalAmount: {
+          $sum: "$totalAmount",
+        },
+
+        totalPaid: {
+          $sum: "$paidAmount",
+        },
+
+        totalDue: {
+          $sum: "$dueAmount",
+        },
+
+        invoices: {
+          $push: {
+            invoiceId: "$_id",
+            status: "$status",
+            paymentMethod: "$paymentMethod",
+            subTotal: "$subTotal",
+            discount: "$discount",
+            totalAmount: "$totalAmount",
+            paidAmount: "$paidAmount",
+            dueAmount: "$dueAmount",
+            createdAt: "$createdAt",
+            items: "$items",
+          },
+        },
+      },
+    },
+  ]);
+
+  if (!data.length) {
+    return next(new AppError(messages.invoice.noCustomerMatch, 404));
+  }
+
+  return res.status(200).json({
+    success: true,
+    message: messages.invoice.fetchedSuccessfully,
+    data: data[0],
+  });
 };
