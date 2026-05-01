@@ -1,4 +1,5 @@
 import { Customer } from "../../../db/index.js";
+import { ApiFeature } from "../../utils/apiFeatures.js";
 import { AppError } from "../../utils/appError.js";
 import { messages } from "../../utils/constant/messages.js";
 
@@ -26,6 +27,16 @@ export const addCustomer = async (req, res, next) => {
     return next(new AppError(messages.customer.alreadyExist, 409));
   }
 
+  // default balance = 0
+  const balance = 0;
+
+  // determine isActive
+  let isActive = true;
+
+  if (balance > creditLimit && creditLimit > 0) {
+    isActive = false;
+  }
+
   const customer = new Customer({
     name: formattedName,
     phone,
@@ -36,6 +47,8 @@ export const addCustomer = async (req, res, next) => {
     creditLimit,
     allowCredit,
     notes,
+    balance,
+    isActive,
   });
 
   const createdCustomer = await customer.save();
@@ -50,8 +63,6 @@ export const addCustomer = async (req, res, next) => {
     data: createdCustomer,
   });
 };
-
- "../../utils/constant/messages.js";
 
 // Update Customer
 export const updateCustomer = async (req, res, next) => {
@@ -91,15 +102,29 @@ export const updateCustomer = async (req, res, next) => {
     }
   }
 
+  // update values first
+  const finalCreditLimit =
+    creditLimit !== undefined ? creditLimit : customer.creditLimit;
+
+  const finalBalance = customer.balance;
+
+  // determine isActive automatically
+  let finalIsActive =
+    isActive !== undefined ? isActive : customer.isActive;
+
+  if (finalBalance > finalCreditLimit && finalCreditLimit > 0) {
+    finalIsActive = false;
+  }
+
   customer.name = formattedName ?? customer.name;
   customer.phone = phone ?? customer.phone;
   customer.secondPhone = secondPhone ?? customer.secondPhone;
   customer.email = email ?? customer.email;
   customer.companyName = companyName ?? customer.companyName;
   customer.address = address ?? customer.address;
-  customer.creditLimit = creditLimit ?? customer.creditLimit;
+  customer.creditLimit = finalCreditLimit;
   customer.allowCredit = allowCredit ?? customer.allowCredit;
-  customer.isActive = isActive ?? customer.isActive;
+  customer.isActive = finalIsActive;
   customer.notes = notes ?? customer.notes;
 
   const updatedCustomer = await customer.save();
@@ -114,7 +139,6 @@ export const updateCustomer = async (req, res, next) => {
     data: updatedCustomer,
   });
 };
-
 
 // Get All Customers
 export const getAllCustomers = async (req, res, next) => {
@@ -162,7 +186,6 @@ export const getAllCustomers = async (req, res, next) => {
     data: customers,
   });
 };
-
 
 // Get Customer By Id
 export const getCustomerById = async (req, res, next) => {

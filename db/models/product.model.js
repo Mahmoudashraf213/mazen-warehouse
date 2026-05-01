@@ -6,6 +6,7 @@ const productSchema = new Schema(
       type: String,
       trim: true,
       required: true,
+      unique: true,
     },
 
     description: {
@@ -43,33 +44,6 @@ const productSchema = new Schema(
   { timestamps: true }
 );
 
-// before save
-productSchema.pre("save", function (next) {
-  if (this.unitPrice && this.unitsPerBox) {
-    this.boxPrice = this.unitPrice * this.unitsPerBox;
-  }
-  next();
-});
 
-// before update
-productSchema.pre("findOneAndUpdate", async function (next) {
-  const update = this.getUpdate();
-
-  const docToUpdate = await this.model.findOne(this.getQuery());
-
-  const unitPrice =
-    update.unitPrice !== undefined
-      ? update.unitPrice
-      : docToUpdate.unitPrice;
-
-  const unitsPerBox =
-    update.unitsPerBox !== undefined
-      ? update.unitsPerBox
-      : docToUpdate.unitsPerBox;
-
-  update.boxPrice = unitPrice * unitsPerBox;
-
-  next();
-});
 
 export const Product = model("Product", productSchema);

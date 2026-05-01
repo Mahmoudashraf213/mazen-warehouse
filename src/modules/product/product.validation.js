@@ -1,5 +1,5 @@
 import joi from "joi";
-import { generalFields } from "../../middleware/vaildation.js";
+import { generalFields } from "../../utils/generalFields.js";
 
 // Add product schema
 export const addProductSchema = joi.object({

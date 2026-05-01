@@ -13,10 +13,10 @@ export const bootStrap = (app, express) => {
   };
   app.use(cors(corsOptions));
   // routes
-  app.use("product", productRouter);
-  app.use("customer", customerRouter);
-  app.use("invoice", invoiceRouter);
-  app.use("dashboard", dashboardRouter);
+  app.use("/product", productRouter);
+  app.use("/customer", customerRouter);
+  app.use("/invoice", invoiceRouter);
+  app.use("/dashboard", dashboardRouter);
   // global error
   app.use(globalErrorHandling);
 };
