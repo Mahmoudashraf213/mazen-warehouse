@@ -2,7 +2,7 @@ import { Router } from "express";
 import { isValid } from "../../middleware/vaildation.js";
 import { asyncHandler } from "../../middleware/asyncHandler.js";
 import { createInvoiceSchema, deleteInvoiceByIdSchema, getInvoiceByIdSchema, refundInvoiceSchema } from "./invoice.validation.js";
-import { createInvoice, deleteInvoiceById, generateInvoicePDF, getAllInvoices, getInvoiceById, updateInvoice } from "./invoice.controller.js";
+import { createInvoice, deleteInvoiceById, generateInvoicePDF, getAllInvoices, getCustomerInvoicesDetails,  getInvoiceById, updateInvoice } from "./invoice.controller.js";
 import { isAuthenticated } from "../../middleware/authentication.js";
 import { isAuthorized } from "../../middleware/autheraization.js";
 import { roles } from "../../utils/constant/enum.js";
@@ -59,5 +59,13 @@ invoiceRouter.get(
   isAuthenticated(),
   isAuthorized([roles.USER, roles.ADMIN]),
   asyncHandler(generateInvoicePDF)
+);
+
+// get customer invoice details route
+invoiceRouter.get(
+  "/customer/:customerId/details",
+  isAuthenticated(),
+  isAuthorized([roles.USER, roles.ADMIN]),
+  asyncHandler(getCustomerInvoicesDetails)
 );
 export default invoiceRouter;
