@@ -264,54 +264,38 @@ export const deleteInvoiceById = async (req, res, next) => {
   });
 };
 
-// Generate PDF
-export const generateInvoicePDF = async (req, res, next) => {
-
+export const getInvoicePrintHTML = async (req, res, next) => {
   const { invoiceId } = req.params;
-
 
   const invoice = await Invoice.findById(invoiceId)
     .populate("customerId")
     .populate("items.productId");
 
-
   if (!invoice) {
-    return next(
-      new AppError("Invoice not found", 404)
-    );
+    return next(new AppError(messages.invoice.notExist, 404));
   }
 
-
   const html = `
+  <!DOCTYPE html>
   <html>
-
   <head>
-
+    <meta charset="UTF-8" />
     <style>
-
       body {
         font-family: Arial;
         padding: 30px;
         color: #333;
       }
 
-
       .header {
         text-align: center;
         margin-bottom: 20px;
       }
 
-
       .header h1 {
         margin: 0;
         color: #2c3e50;
       }
-
-
-      .info {
-        margin-bottom: 20px;
-      }
-
 
       table {
         width: 100%;
@@ -319,309 +303,96 @@ export const generateInvoicePDF = async (req, res, next) => {
         margin-top: 20px;
       }
 
-
       table, th, td {
         border: 1px solid #ddd;
       }
-
 
       th, td {
         padding: 10px;
         text-align: center;
       }
 
-
       th {
         background: #f4f4f4;
       }
-
 
       .totals {
         margin-top: 20px;
         text-align: right;
       }
 
-
-      .totals p {
-        margin: 5px 0;
-        font-size: 15px;
-      }
-
-
       .seller {
-        border: 1px solid #ddd;
-        padding: 12px;
         margin-top: 30px;
+        padding: 15px;
         background: #f9f9f9;
-        border-radius: 5px;
+        border: 1px solid #ddd;
       }
 
-
-      .footer {
-        margin-top: 20px;
-        text-align: center;
-        font-size: 12px;
-        color: #888;
+      @media print {
+        button { display: none; }
       }
-
     </style>
-
   </head>
-
 
   <body>
 
-    <!-- Header -->
     <div class="header">
       <h1>INVOICE</h1>
-      <p>Invoice Management System</p>
     </div>
 
+    <p><strong>Customer:</strong> ${invoice.customerId?.name || "N/A"}</p>
+    <p><strong>Date:</strong> ${new Date(invoice.createdAt).toLocaleDateString()}</p>
 
-    <!-- Invoice Info -->
-    <div class="info">
-      <p>
-        <strong>Invoice ID:</strong>
-        ${invoice._id}
-      </p>
-
-      <p>
-        <strong>Customer:</strong>
-        ${invoice.customerId?.name || "N/A"}
-      </p>
-
-      <p>
-        <strong>Date:</strong>
-        ${new Date(
-          invoice.createdAt
-        ).toLocaleDateString()}
-      </p>
-
-      <p>
-        <strong>Status:</strong>
-        ${invoice.status}
-      </p>
-    </div>
-
-
-    <!-- Items Table -->
     <table>
-
       <thead>
-
         <tr>
           <th>Product</th>
-          <th>Quantity</th>
+          <th>Qty</th>
           <th>Unit Price</th>
           <th>Total</th>
         </tr>
-
       </thead>
 
-
       <tbody>
-
         ${invoice.items
-          .map((item) => {
-
-            const unitsPerBox =
-              item.productId?.unitsPerBox || 1;
-
-
-            const isFullBox =
-              item.quantity %
-                unitsPerBox ===
-              0;
-
-
-            let quantityText =
-              "";
-
-
-            if (isFullBox) {
-
-              const boxes =
-                item.quantity /
-                unitsPerBox;
-
-
-              quantityText =
-                boxes === 1
-                  ? "1 Box"
-                  : `${boxes} Boxes`;
-
-            }
-
-            else {
-
-              quantityText =
-                item.quantity === 1
-                  ? "1 Unit"
-                  : `${item.quantity} Units`;
-
-            }
-
-
-            return `
-
-              <tr>
-
-                <td>
-                  ${item.productId?.name || "N/A"}
-                </td>
-
-                <td>
-                  ${quantityText}
-                </td>
-
-                <td>
-                  ${item.unitPrice}
-                </td>
-
-                <td>
-                  ${item.totalPrice}
-                </td>
-
-              </tr>
-
-            `;
-
-          })
+          .map(
+            (item) => `
+          <tr>
+            <td>${item.productId?.name || "N/A"}</td>
+            <td>${item.quantity}</td>
+            <td>${item.unitPrice}</td>
+            <td>${item.totalPrice}</td>
+          </tr>
+        `
+          )
           .join("")}
-
       </tbody>
-
     </table>
 
-
-    <!-- Totals -->
     <div class="totals">
-
-      <p>
-        <strong>Subtotal:</strong>
-        ${invoice.subTotal || 0}
-      </p>
-
-      <p>
-        <strong>Discount:</strong>
-        ${invoice.discount || 0}
-      </p>
-
-      <p>
-        <strong>Total:</strong>
-        ${invoice.totalAmount || 0}
-      </p>
-
-      <p>
-        <strong>Paid:</strong>
-        ${invoice.paidAmount || 0}
-      </p>
-
-      <p>
-        <strong>Due:</strong>
-        ${invoice.dueAmount || 0}
-      </p>
-
+      <p><strong>Subtotal:</strong> ${invoice.subTotal}</p>
+      <p><strong>Discount:</strong> ${invoice.discount}</p>
+      <p><strong>Total:</strong> ${invoice.totalAmount}</p>
+      <p><strong>Paid:</strong> ${invoice.paidAmount}</p>
+      <p><strong>Due:</strong> ${invoice.dueAmount}</p>
     </div>
 
-
-    <!-- Seller Section -->
     <div class="seller">
-
-      <p>
-        <strong>Seller Name:</strong>
-        ماذن رجب محمد
-      </p>
-
-      <p>
-        <strong>Phone 1:</strong>
-        01025210536
-      </p>
-
-      <p>
-        <strong>Phone 2:</strong>
-        01158325071
-      </p>
-
+      <p><strong>Seller:</strong> ماذن رجب محمد</p>
+      <p>📞 01025210536</p>
+      <p>📞 01158325071</p>
     </div>
 
-
-    <!-- Footer -->
-    <div class="footer">
-      Thank you for your business 🙏
-    </div>
-
+    <button onclick="window.print()" style="margin-top:20px;padding:10px">
+      Print Invoice
+    </button>
 
   </body>
   </html>
   `;
 
-
-
-  const browser =
-    await puppeteer.launch({
-
-      args: chromium.args,
-
-      executablePath:
-        await chromium.executablePath(),
-
-      headless:
-        chromium.headless,
-
-    });
-
-
-
-  const page =
-    await browser.newPage();
-
-
-
-  await page.setContent(
-    html,
-    {
-      waitUntil:
-        "networkidle0",
-    }
-  );
-
-
-
-  const pdf =
-    await page.pdf({
-
-      format: "A4",
-
-      printBackground: true,
-
-    });
-
-
-
-  await browser.close();
-
-
-
-  res.set({
-
-    "Content-Type":
-      "application/pdf",
-
-    "Content-Disposition":
-      `inline; filename=invoice-${invoiceId}.pdf`,
-
-  });
-
-
-
-  res.send(pdf);
-
+  return res.send(html);
 };
-
-
-
-
 // Get Customer Invoices Details
 export const getCustomerInvoicesDetails = async (
   req,
