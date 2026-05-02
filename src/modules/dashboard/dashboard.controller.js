@@ -48,18 +48,30 @@ export const getDashboard = async (req, res, next) => {
   // inventory calculations
   const products = await Product.find();
 
+  const totalProducts = products.length;
+
   const totalStockQuantity = products.reduce(
     (acc, product) => acc + (product.stock || 0),
     0
   );
 
-  const totalStockValue = products.reduce(
+  // سعر البضاعة بسعر الشراء
+  const totalStockCost = products.reduce(
     (acc, product) =>
       acc + ((product.stock || 0) * (product.unitPrice || 0)),
     0
   );
 
-  const totalProducts = products.length;
+  // سعر البضاعة بسعر البيع
+  const totalStockRetail = products.reduce(
+    (acc, product) =>
+      acc + ((product.stock || 0) * (product.retailPrice || 0)),
+    0
+  );
+
+  // الربح المتوقع
+  const expectedProfit =
+    totalStockRetail - totalStockCost;
 
   const daily = await calc(startOfDay);
   const weekly = await calc(startOfWeek);
@@ -73,7 +85,9 @@ export const getDashboard = async (req, res, next) => {
       inventory: {
         totalProducts,
         totalStockQuantity,
-        totalStockValue,
+        totalStockCost,
+        totalStockRetail,
+        expectedProfit,
       },
       daily,
       weekly,
