@@ -55,21 +55,21 @@ export const getDashboard = async (req, res, next) => {
     0
   );
 
-  // سعر البضاعة بسعر الشراء
+  // Total stock cost (purchase price)
   const totalStockCost = products.reduce(
     (acc, product) =>
       acc + ((product.stock || 0) * (product.unitPrice || 0)),
     0
   );
 
-  // سعر البضاعة بسعر البيع
+  // Total stock retail value (selling price)
   const totalStockRetail = products.reduce(
     (acc, product) =>
       acc + ((product.stock || 0) * (product.retailPrice || 0)),
     0
   );
 
-  // الربح المتوقع
+  // Expected profit
   const expectedProfit =
     totalStockRetail - totalStockCost;
 
