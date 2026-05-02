@@ -1,9 +1,7 @@
-import { Invoice } from "../../../db/index.js";
+import { Invoice, Product } from "../../../db/index.js";
 
 // Dashboard Reports
 export const getDashboard = async (req, res, next) => {
-  const now = new Date();
-
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
 
@@ -14,7 +12,7 @@ export const getDashboard = async (req, res, next) => {
   startOfMonth.setMonth(startOfMonth.getMonth() - 1);
 
   const startOfQuarter = new Date();
-  startOfQuarter.setMonth(startOfQuarter.getMonth() - 3); 
+  startOfQuarter.setMonth(startOfQuarter.getMonth() - 3);
 
   const startOfYear = new Date();
   startOfYear.setFullYear(startOfYear.getFullYear() - 1);
@@ -47,6 +45,22 @@ export const getDashboard = async (req, res, next) => {
     };
   };
 
+  // inventory calculations
+  const products = await Product.find();
+
+  const totalStockQuantity = products.reduce(
+    (acc, product) => acc + (product.stock || 0),
+    0
+  );
+
+  const totalStockValue = products.reduce(
+    (acc, product) =>
+      acc + ((product.stock || 0) * (product.unitPrice || 0)),
+    0
+  );
+
+  const totalProducts = products.length;
+
   const daily = await calc(startOfDay);
   const weekly = await calc(startOfWeek);
   const monthly = await calc(startOfMonth);
@@ -56,6 +70,11 @@ export const getDashboard = async (req, res, next) => {
   return res.status(200).json({
     success: true,
     data: {
+      inventory: {
+        totalProducts,
+        totalStockQuantity,
+        totalStockValue,
+      },
       daily,
       weekly,
       monthly,
