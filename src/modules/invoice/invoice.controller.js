@@ -20,7 +20,7 @@ const applyInvoiceCalculations = (invoice) => {
   invoice.totalAmount = subTotal - (invoice.discount || 0);
   invoice.dueAmount = invoice.totalAmount - (invoice.paidAmount || 0);
 
-  if (invoice.dueAmount <= 0) {
+  if (invoice.dueAmount <= 2) {
     invoice.status = invoiceStatus.PAID;
   } else if (invoice.paidAmount > 0) {
     invoice.status = invoiceStatus.PARTIAL;
