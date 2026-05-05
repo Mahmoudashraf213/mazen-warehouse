@@ -18,8 +18,10 @@ const applyInvoiceCalculations = (invoice) => {
 
   invoice.subTotal = subTotal;
   invoice.totalAmount = subTotal - (invoice.discount || 0);
-  invoice.dueAmount = invoice.totalAmount - (invoice.paidAmount || 0);
-
+  invoice.dueAmount = Math.max(
+    invoice.totalAmount - (invoice.paidAmount || 0),
+    0
+  );
   if (invoice.dueAmount <= 0) {
     invoice.status = invoiceStatus.PAID;
   } else if (invoice.paidAmount > 0) {
@@ -62,8 +64,8 @@ export const createInvoice = async (req, res, next) => {
       unitPrice: item.unitPrice,
       totalPrice: 0,
     });
-
     product.stock -= item.quantity;
+    product.totalUnits = product.stock * product.unitsPerBox;
     await product.save();
   }
 
@@ -115,9 +117,8 @@ export const updateInvoice = async (req, res, next) => {
   if (items?.length) {
     for (const updatedItem of items) {
       const oldItem = invoice.items.find(
-        (item) => item.productId.toString() === updatedItem.productId
+        (item) => item.productId.toString() === updatedItem.productId.toString()
       );
-
       if (!oldItem) {
         return next(new AppError(messages.invoice.itemNotFound, 404));
       }
@@ -185,7 +186,7 @@ export const getAllInvoices = async (req, res, next) => {
     .select();
 
   const invoices = await apiFeature.mongooseQuery
-    .populate("items.productId") 
+    .populate("items.productId")
     .populate("customerId");
 
   if (!invoices || invoices.length === 0) {
@@ -243,6 +244,7 @@ export const deleteInvoiceById = async (req, res, next) => {
 
     if (product) {
       product.stock += item.quantity;
+      product.totalUnits = product.stock * product.unitsPerBox;
       await product.save();
     }
   }
@@ -355,8 +357,8 @@ export const getInvoicePrintHTML = async (req, res, next) => {
 
       <tbody>
         ${invoice.items
-          .map(
-            (item) => `
+      .map(
+        (item) => `
           <tr>
             <td>${item.productId?.name || "N/A"}</td>
             <td>${item.quantity}</td>
@@ -364,8 +366,8 @@ export const getInvoicePrintHTML = async (req, res, next) => {
             <td>${item.totalPrice}</td>
           </tr>
         `
-          )
-          .join("")}
+      )
+      .join("")}
       </tbody>
     </table>
 
