@@ -18,10 +18,7 @@ const applyInvoiceCalculations = (invoice) => {
 
   invoice.subTotal = subTotal;
   invoice.totalAmount = subTotal - (invoice.discount || 0);
-  invoice.dueAmount = Math.max(
-    invoice.totalAmount - (invoice.paidAmount || 0),
-    0
-  );
+  invoice.dueAmount = Math.max(invoice.totalAmount - (invoice.paidAmount || 0), 0);
   if (invoice.dueAmount <= 0) {
     invoice.status = invoiceStatus.PAID;
   } else if (invoice.paidAmount > 0) {
